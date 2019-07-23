@@ -1,0 +1,91 @@
+package controller;
+
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import model.UserModel;
+
+/**
+ * Servlet implementation class NewPasswordServlet
+ */
+@WebServlet("/NewPasswordServlet")
+public class NewPasswordServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public NewPasswordServlet() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		response.getWriter().append("Served at: ").append(request.getContextPath());
+	}
+
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		UserModel userModel = new UserModel();
+		String action = request.getParameter("task");
+		HttpSession session = request.getSession();
+		String page = "";
+		
+		if (action.compareTo("home") == 0) {
+			String customername = request.getParameter("customername");
+			page = "Customer.jsp";
+			session.setAttribute("customername", customername);
+			request.getRequestDispatcher(page).forward(request, response);
+		} else if (action.compareTo("search") == 0) {
+			String searchBox = request.getParameter("searchBox");
+			System.out.println(searchBox);
+		} else if (action.compareTo("details") == 0) {
+			session.setAttribute("customername", request.getParameter("customername"));
+			page = "UserDetails.jsp";
+			request.getRequestDispatcher(page).forward(request, response);
+		} else if (action.compareTo("renew") == 0) {
+			String customername = request.getParameter("customername");
+			String oldPassword = request.getParameter("verification");
+			String newPassword1 = request.getParameter("newpass");
+			String newPassword2 = request.getParameter("retype");
+			if (oldPassword.isEmpty() || newPassword1.isEmpty() || newPassword2.isEmpty()) {
+				page = "NewPassword.jsp";
+				session.setAttribute("customername", customername);
+				session.setAttribute("message", "");
+				request.getRequestDispatcher(page).forward(request, response);
+				return;
+			}
+			String password = userModel.getPassword(customername);
+			if (oldPassword.compareTo(password) != 0) {
+				page = "NewPassword.jsp";
+				session.setAttribute("customername", customername);
+				session.setAttribute("message", "* The old password is incorrect");
+				request.getRequestDispatcher(page).forward(request, response);
+				return;
+			}
+			if (newPassword1.compareTo(newPassword2) != 0) {
+				page = "NewPassword.jsp";
+				session.setAttribute("customername", customername);
+				session.setAttribute("message", "* The two new passwords do not match");
+				request.getRequestDispatcher(page).forward(request, response);
+				return;
+			}
+			userModel.updatePassword(customername, newPassword1);
+			session.setAttribute("customername", request.getParameter("customername"));
+			page = "UserDetails.jsp";
+			request.getRequestDispatcher(page).forward(request, response);
+		}
+	}
+
+}
